@@ -7,7 +7,7 @@
       "dependencies": {
         "com.unity.modules.imgui": "1.0.0"
       },
-      "hash": "fbc12b2c0b6a1ee5ce7d534f9db936bc59069219"
+      "hash": "5acafe712e14d65ebb8e746a040ffe53cd1f4d39"
     },
     "com.github-glitchenzo.nugetforunity": {
       "version": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
@@ -113,7 +113,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.adaptiveperformance": {
-      "version": "5.1.4",
+      "version": "5.1.5",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -178,7 +178,7 @@
       "source": "builtin",
       "dependencies": {
         "com.unity.mobile.android-logcat": "1.4.5",
-        "com.unity.adaptiveperformance": "5.1.4",
+        "com.unity.adaptiveperformance": "5.1.5",
         "com.unity.mobile.notifications": "2.4.1"
       }
     },
