@@ -1,0 +1,16 @@
+{
+    "name": "ADVance.Sample",
+    "rootNamespace": "",
+    "references": [
+        "ADVance"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
