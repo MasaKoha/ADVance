@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ADVance.Command;
 using ADVance.Command.Interface;
+using ADVance.Command.Operator;
 using ADVance.Data;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -30,6 +31,12 @@ namespace ADVance.Base
             RegisterCommand(new ShowTextCommand());
             RegisterCommand(new ChoiceCommand());
             RegisterCommand(new BranchCommand(BranchRegistry));
+            RegisterBranch(new EqualCommand());
+            RegisterBranch(new NotEqualCommand());
+            RegisterBranch(new GreaterCommand());
+            RegisterBranch(new GreaterOrEqualCommand());
+            RegisterBranch(new LessCommand());
+            RegisterBranch(new LessOrEqualCommand());
         }
 
         public void Load(List<ScenarioLine> lines, int startId = 1)

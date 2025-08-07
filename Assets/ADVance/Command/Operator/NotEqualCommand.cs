@@ -1,16 +1,20 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
+using ADVance.Command.Interface;
 
 namespace ADVance.Command.Operator
 {
-    public class NotEqualCommand : CommandBase
+    public class NotEqualCommand : IScenarioBranchEvaluator
     {
-        public override string CommandName => "NotEqual";
+        public string OperatorName => "NotEqual";
 
-        public override async UniTask ExecuteCommandAsync(List<string> args)
+        public bool Evaluate(List<string> args)
         {
-            await UniTask.Yield();
-            bool result = args.Count >= 2 && args[0] != args[1];
+            if (args.Count >= 2)
+            {
+                return args[0] != args[1];
+            }
+
+            return false;
         }
     }
 }

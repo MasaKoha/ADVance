@@ -1,18 +1,20 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
+using ADVance.Command.Interface;
 
 namespace ADVance.Command.Operator
 {
-    public class LessCommand : CommandBase
+    public class LessCommand : IScenarioBranchEvaluator
     {
-        public override string CommandName => "Less";
+        public string OperatorName => "Less";
 
-        public override async UniTask ExecuteCommandAsync(List<string> args)
+        public bool Evaluate(List<string> args)
         {
-            await UniTask.Yield();
-            bool result = false;
             if (args.Count >= 2 && float.TryParse(args[0], out var a) && float.TryParse(args[1], out var b))
-                result = a < b;
+            {
+                return a < b;
+            }
+
+            return false;
         }
     }
 }

@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 
 namespace ADVance
 {
-
     public class ScenarioCommandRegistry
     {
         private readonly Dictionary<string, IScenarioCommandAsync> _commands = new();
@@ -37,7 +36,12 @@ namespace ADVance
 
         public bool Evaluate(string op, List<string> args)
         {
-            return false;
+            return _evaluators.TryGetValue(op, out var evaluator) && evaluator.Evaluate(args);
+        }
+
+        public IScenarioBranchEvaluator GetEvaluator(string operatorName)
+        {
+            return _evaluators.GetValueOrDefault(operatorName);
         }
     }
 }
