@@ -1,6 +1,8 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using R3;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -32,14 +34,17 @@ namespace ADVance
 
         [SerializeField] private bool _enableTypewriterEffect = true;
 
-        private Coroutine _typewriterCoroutine;
+        private CancellationTokenSource _typewriterCancellationTokenSource;
         private string _currentDisplayText;
+        private bool _isTypewriterActive = false;
         private readonly Subject<Unit> _onContinueScenario = new();
         public Observable<Unit> OnContinueScenario => _onContinueScenario;
         private readonly Subject<int> _onSelectedChoice = new();
         public Observable<int> OnSelectedChoice => _onSelectedChoice;
         private readonly Subject<Unit> _onStartDownload = new();
         public Observable<Unit> OnStartDownload => _onStartDownload;
+
+        private readonly CompositeDisposable _disposables = new();
 
         public void Initialize()
         {
@@ -55,22 +60,22 @@ namespace ADVance
 
         private void SetupDialogUI()
         {
-            if (_nextButton != null)
-            {
-                _nextButton.onClick.AddListener(() =>
-                {
-                    if (_typewriterCoroutine != null)
-                    {
-                        StopCoroutine(_typewriterCoroutine);
-                        _typewriterCoroutine = null;
-                        CompleteTypewriterEffect();
-                        return;
-                    }
+            _nextButton.onClick.AddListener(HandleContinueAction);
+        }
 
-                    _nextButton.gameObject.SetActive(false);
-                    _onContinueScenario.OnNext(Unit.Default);
-                });
+        private void HandleContinueAction()
+        {
+            if (_isTypewriterActive && _typewriterCancellationTokenSource != null)
+            {
+                _typewriterCancellationTokenSource.Cancel();
+                _typewriterCancellationTokenSource = null;
+                _isTypewriterActive = false;
+                CompleteTypewriterEffect();
+                return;
             }
+
+            _nextButton.gameObject.SetActive(false);
+            _onContinueScenario.OnNext(Unit.Default);
         }
 
         private void SetupChoiceUI()
@@ -83,39 +88,40 @@ namespace ADVance
             for (var i = 0; i < _choiceButtons.Length; i++)
             {
                 var index = i;
-                _choiceButtons[i].onClick.AddListener(() => { _onSelectedChoice.OnNext(index); });
+                _choiceButtons[i].onClick.AddListener(() => _onSelectedChoice.OnNext(index));
             }
         }
 
         private void SetupPreloadUI()
         {
-            if (_preloadPanel != null)
+            if (_preloadPanel == null)
             {
-                _preloadPanel.SetActive(false);
+                return;
             }
 
-            if (_downloadProgressSlider != null)
-            {
-                _downloadProgressSlider.value = 0f;
-            }
-
-            if (_startDownloadButton != null)
-            {
-                _startDownloadButton.onClick.AddListener(() => _onStartDownload.OnNext(Unit.Default));
-            }
+            _preloadPanel.SetActive(false);
+            _downloadProgressSlider.value = 0f;
+            _startDownloadButton.onClick
+                .AddListener(() => _onStartDownload.OnNext(Unit.Default));
         }
 
         public void ShowText(string text)
         {
             _currentDisplayText = text;
-            if (_typewriterCoroutine != null)
+            if (_typewriterCancellationTokenSource != null)
             {
-                StopCoroutine(_typewriterCoroutine);
+                _typewriterCancellationTokenSource.Cancel();
+                _typewriterCancellationTokenSource = null;
             }
+
+            _isTypewriterActive = false;
+            ShowNextButton();
 
             if (_enableTypewriterEffect && _text != null)
             {
-                _typewriterCoroutine = StartCoroutine(TypewriterEffect(text));
+                _isTypewriterActive = true;
+                _typewriterCancellationTokenSource = new CancellationTokenSource();
+                TypewriterEffectAsync(text, _typewriterCancellationTokenSource.Token).Forget();
             }
             else
             {
@@ -123,25 +129,36 @@ namespace ADVance
                 {
                     _text.text = text;
                 }
-
-                ShowNextButton();
             }
         }
 
-        private IEnumerator TypewriterEffect(string text)
+        private async UniTask TypewriterEffectAsync(string text, CancellationToken cancellationToken)
         {
             _text.text = "";
 
-            var delay = 1f / _charactersPerSecond;
+            var delay = 1000f / _charactersPerSecond; // Convert to milliseconds
 
             for (var i = 0; i <= text.Length; i++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 _text.text = text.Substring(0, i);
-                yield return new WaitForSeconds(delay);
+
+                try
+                {
+                    await UniTask.Delay((int)delay, cancellationToken: cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
             }
 
-            _typewriterCoroutine = null;
-            ShowNextButton();
+            _typewriterCancellationTokenSource = null;
+            _isTypewriterActive = false;
         }
 
         private void CompleteTypewriterEffect()
@@ -190,13 +207,20 @@ namespace ADVance
 
         public void ShowPreloadConfirmation(string sizeText)
         {
-            _preloadPanel.SetActive(true);
+            if (_preloadPanel != null)
+            {
+                _preloadPanel.SetActive(true);
+            }
+
             _preloadSizeText.text = sizeText;
         }
 
         public void HidePreloadPanel()
         {
-            _preloadPanel.SetActive(false);
+            if (_preloadPanel != null)
+            {
+                _preloadPanel.SetActive(false);
+            }
         }
 
         public void UpdateDownloadProgress(float progress)
@@ -208,6 +232,13 @@ namespace ADVance
         public void SetStartDownloadButtonInteractable(bool interactable)
         {
             _startDownloadButton.interactable = interactable;
+        }
+
+        private void OnDestroy()
+        {
+            _typewriterCancellationTokenSource?.Cancel();
+            _typewriterCancellationTokenSource?.Dispose();
+            _disposables?.Dispose();
         }
     }
 }
