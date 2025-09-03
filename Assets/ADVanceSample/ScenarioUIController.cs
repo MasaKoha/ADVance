@@ -10,7 +10,7 @@ namespace ADVance
     public class ScenarioUIController : MonoBehaviour
     {
         [Header("Dialog UI")]
-        [SerializeField] private TextMeshProUGUI _dialogText;
+        [SerializeField] private TextMeshProUGUI _text;
 
         [SerializeField] private Button _nextButton;
 
@@ -113,15 +113,15 @@ namespace ADVance
                 StopCoroutine(_typewriterCoroutine);
             }
 
-            if (_enableTypewriterEffect && _dialogText != null)
+            if (_enableTypewriterEffect && _text != null)
             {
                 _typewriterCoroutine = StartCoroutine(TypewriterEffect(text));
             }
             else
             {
-                if (_dialogText != null)
+                if (_text != null)
                 {
-                    _dialogText.text = text;
+                    _text.text = text;
                 }
 
                 ShowNextButton();
@@ -130,13 +130,13 @@ namespace ADVance
 
         private IEnumerator TypewriterEffect(string text)
         {
-            _dialogText.text = "";
+            _text.text = "";
 
             var delay = 1f / _charactersPerSecond;
 
             for (var i = 0; i <= text.Length; i++)
             {
-                _dialogText.text = text.Substring(0, i);
+                _text.text = text.Substring(0, i);
                 yield return new WaitForSeconds(delay);
             }
 
@@ -148,7 +148,7 @@ namespace ADVance
         {
             if (_currentDisplayText != null)
             {
-                _dialogText.text = _currentDisplayText;
+                _text.text = _currentDisplayText;
             }
 
             ShowNextButton();
