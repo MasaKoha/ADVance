@@ -4,7 +4,6 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using R3;
 
 namespace ADVance.Tests
 {
