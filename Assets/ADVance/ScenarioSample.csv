@@ -1,0 +1,10 @@
+ID,Type,NextIDs,Args
+1,ShowText,2,こんにちは、${name}さん！
+2,Set,3,like,5
+3,IfGreaterEqual,4|5,like,10
+4,ShowText,6,好感度高いね！
+5,ShowText,6,まだ距離があるみたい。
+6,Choice,7|8,mood,元気！,普通かな
+7,ShowText,9,元気そうで安心した！
+8,ShowText,9,なるほど、落ち着いてるね。
+9,Print,,mood
