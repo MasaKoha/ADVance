@@ -202,7 +202,7 @@ namespace ADVance
         public void UpdateDownloadProgress(float progress)
         {
             _downloadProgressSlider.value = progress;
-            _downloadProgressText.text = $"{(progress * 100):F0}%";
+            _downloadProgressText.text = $"{progress * 100:F0}%";
         }
 
         public void SetStartDownloadButtonInteractable(bool interactable)

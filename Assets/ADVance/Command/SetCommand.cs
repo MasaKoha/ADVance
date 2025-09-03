@@ -10,7 +10,7 @@ namespace ADVance.Command
         private Subject<(string varName, object value)> _onVariableSet;
         public Observable<(string varName, object value)> OnVariableSet => _onVariableSet ??= new Subject<(string varName, object value)>();
 
-        public override async UniTask ExecuteCommandAsync(List<string> args)
+        public override UniTask ExecuteCommandAsync(List<string> args)
         {
             var varName = args[0];
             var valueString = args[1];
@@ -27,7 +27,7 @@ namespace ADVance.Command
 
             _onVariableSet?.OnNext((varName, value));
             Manager.SetCurrentId(Manager.GetNextLineId());
-            await Manager.Wait();
+            return UniTask.CompletedTask;
         }
     }
 }

@@ -18,6 +18,7 @@ namespace ADVance.Base
         private int _currentId;
         public readonly Dictionary<string, object> Variables = new();
         public bool IsWaitingForInput { get; private set; } = false;
+        private bool _isScenarioEnded = false;
         protected readonly ScenarioAssetRegistry _assetRegistry = new();
         public ScenarioCommandRegistry CommandRegistry => _commands;
         public ScenarioBranchRegistry BranchRegistry => _branches;
@@ -45,10 +46,23 @@ namespace ADVance.Base
             RegisterCommand(new ShowTextCommand());
             RegisterCommand(new ChoiceCommand());
             RegisterCommand(new BranchCommand(BranchRegistry));
+            RegisterCommand(new IfEqualCommand(BranchRegistry));
+            RegisterCommand(new IfNotEqualCommand(BranchRegistry));
+            RegisterCommand(new IfGreaterCommand(BranchRegistry));
             RegisterCommand(new IfGreaterEqualCommand(BranchRegistry));
+            RegisterCommand(new IfLessCommand(BranchRegistry));
+            RegisterCommand(new IfLessEqualCommand(BranchRegistry));
             RegisterCommand(new SetCommand());
+            RegisterCommand(new AddCommand());
             RegisterCommand(new PrintCommand());
             RegisterCommand(new PreloadAssetCommand());
+            RegisterCommand(new ShowCharacterCommand());
+            RegisterCommand(new ShowBackgroundCommand());
+            RegisterCommand(new PlayVoiceCommand());
+            RegisterCommand(new PlayBGMCommand());
+            RegisterCommand(new PlaySECommand());
+            RegisterCommand(new ShowMenuCommand());
+            RegisterCommand(new WaitCommand());
             RegisterBranch(new EqualCommand());
             RegisterBranch(new NotEqualCommand());
             RegisterBranch(new GreaterCommand());
@@ -105,7 +119,7 @@ namespace ADVance.Base
             IsWaitingForInput = false;
         }
 
-        public void RegisterCommand(IScenarioCommandAsync command)
+        protected void RegisterCommand(IScenarioCommandAsync command)
         {
             command.SetManager(this);
             _commands.Register(command);
@@ -126,6 +140,7 @@ namespace ADVance.Base
         {
             _lines = lines.ToDictionary(x => x.ID);
             _currentId = startId;
+            _isScenarioEnded = false; // 新しいシナリオ開始時に終了フラグをリセット
             ProceedAsync().Forget();
         }
 
@@ -154,7 +169,12 @@ namespace ADVance.Base
                 await UniTask.Yield();
             }
 
-            _onScenarioEnded.OnNext(Unit.Default);
+            // シナリオが既に終了している場合は、複数回の終了イベントを防ぐ
+            if (!_isScenarioEnded)
+            {
+                _isScenarioEnded = true;
+                _onScenarioEnded.OnNext(Unit.Default);
+            }
         }
 
         public void SetCurrentId(int id)

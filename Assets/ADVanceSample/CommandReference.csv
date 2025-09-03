@@ -1,0 +1,102 @@
+ID,Type,NextIDs,Args
+1,ShowText,2,=== ADVanceコマンドリファレンス ===
+2,ShowText,3,
+3,ShowText,4,【変数操作コマンド】
+4,ShowText,5,InitVariable - 変数を初期値で設定
+5,InitVariable,6,health,100
+6,ShowText,7,health変数を100で初期化: ${health}
+7,ShowText,8,Set - 変数に値を設定
+8,Set,9,level,5
+9,ShowText,10,level変数を5に設定: ${level}
+10,ShowText,11,Add - 変数に値を加算/減算
+11,Add,12,health,20
+12,ShowText,13,healthに20を加算: ${health}
+13,Add,14,health,-10
+14,ShowText,15,healthから10を減算: ${health}
+15,ShowText,16,Print - 変数値をコンソールに出力
+16,Print,17,health
+17,ShowText,18,
+18,ShowText,19,【比較・条件分岐コマンド】
+19,ShowText,20,IfEqual - 等価比較
+20,Set,21,testA,10
+21,IfEqual,22|23,testA,10
+22,ShowText,24,testAは10と等しい
+23,ShowText,24,testAは10と等しくない
+24,ShowText,25,IfNotEqual - 非等価比較
+25,IfNotEqual,26|27,testA,5
+26,ShowText,28,testAは5と等しくない
+27,ShowText,28,testAは5と等しい
+28,ShowText,29,IfGreater - より大きい比較
+29,IfGreater,30|31,testA,8
+30,ShowText,32,testAは8より大きい
+31,ShowText,32,testAは8以下
+32,ShowText,33,IfGreaterEqual - 以上比較
+33,IfGreaterEqual,34|35,testA,10
+34,ShowText,36,testAは10以上
+35,ShowText,36,testAは10未満
+36,ShowText,37,IfLess - より小さい比較
+37,IfLess,38|39,testA,15
+38,ShowText,40,testAは15未満
+39,ShowText,40,testAは15以上
+40,ShowText,41,IfLessEqual - 以下比較
+41,IfLessEqual,42|43,testA,10
+42,ShowText,44,testAは10以下
+43,ShowText,44,testAは10より大きい
+44,ShowText,45,
+45,ShowText,46,【選択・分岐コマンド】
+46,ShowText,47,Choice - プレイヤーの選択肢表示
+47,Choice,48|49,battleAction,攻撃する,逃げる
+48,ShowText,50,攻撃を選択: ${battleAction}
+49,ShowText,50,逃走を選択: ${battleAction}
+50,ShowText,51,Branch - 変数値による自動分岐
+51,Set,52,route,2
+52,Branch,53|54|55,route
+53,ShowText,56,ルート1を通過
+54,ShowText,56,ルート2を通過
+55,ShowText,56,ルート3を通過
+56,ShowText,57,
+57,ShowText,58,【表示・UI関連コマンド】
+58,ShowText,59,ShowText - テキスト表示（このコマンド）
+59,ShowText,60,ShowCharacter - キャラクター画像表示
+60,ShowCharacter,61,hero.png
+61,ShowText,62,キャラクター表示完了
+62,ShowText,63,ShowBackground - 背景画像表示
+63,ShowBackground,64,forest.jpg
+64,ShowText,65,背景変更完了
+65,ShowText,66,HideCharacter - キャラクター非表示
+66,HideCharacter,67,
+67,ShowText,68,キャラクター非表示完了
+68,ShowText,69,ShowMenu/HideMenu - メニュー表示/非表示
+69,ShowMenu,70,
+70,ShowText,71,メニュー表示完了
+71,HideMenu,72,
+72,ShowText,73,メニュー非表示完了
+73,ShowText,74,
+74,ShowText,75,【オーディオコマンド】
+75,ShowText,76,PlayBGM - 背景音楽再生
+76,PlayBGM,77,town_theme.ogg
+77,ShowText,78,BGM再生開始
+78,ShowText,79,PlaySE - 効果音再生
+79,PlaySE,80,sword_slash.wav
+80,ShowText,81,効果音再生
+81,ShowText,82,PlayVoice - ボイス再生
+82,PlayVoice,83,greeting.mp3
+83,ShowText,84,ボイス再生
+84,ShowText,85,StopBGM - BGM停止
+85,StopBGM,86,
+86,ShowText,87,BGM停止完了
+87,ShowText,88,
+88,ShowText,89,【その他のコマンド】
+89,ShowText,90,PreloadAsset - アセット事前読み込み
+90,PreloadAsset,91,boss.png,boss_theme.ogg
+91,ShowText,92,アセットプリロード完了
+92,ShowText,93,Wait - 指定時間待機
+93,Wait,94,1500
+94,ShowText,95,1.5秒間待機完了
+95,ShowText,96,
+96,ShowText,97,=== リファレンス終了 ===
+97,ShowText,98,最終ステータス確認:
+98,ShowText,99,Health: ${health} | Level: ${level}
+99,ShowText,100,TestA: ${testA} | Route: ${route}
+100,ShowText,101,Battle Action: ${battleAction}
+101,ShowText,,すべてのコマンドリファレンスが完了しました

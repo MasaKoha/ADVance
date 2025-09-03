@@ -1612,6 +1612,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scenarioController: {fileID: 1815547534}
+  _scenarioData: {fileID: 11400000, guid: 7f72efe42287e427b8d0b5fcbcb7130f, type: 2}
 --- !u!4 &1815547530
 Transform:
   m_ObjectHideFlags: 0
@@ -1639,9 +1640,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7114992cfc09e43648599aa3725795f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _scenarioData: {fileID: 11400000, guid: e8798bad91b5e4bc5860683e97859b35, type: 2}
   _assetPreloadManager: {fileID: 1815547532}
-  _uiController: {fileID: 328204102}
 --- !u!114 &1815547532
 MonoBehaviour:
   m_ObjectHideFlags: 0

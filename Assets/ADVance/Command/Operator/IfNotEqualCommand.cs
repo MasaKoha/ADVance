@@ -2,16 +2,16 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using R3;
 
-namespace ADVance.Command
+namespace ADVance.Command.Operator
 {
-    public class IfGreaterEqualCommand : CommandBase
+    public class IfNotEqualCommand : CommandBase
     {
         private readonly ScenarioBranchRegistry _branches;
-        public override string CommandName => "IfGreaterEqual";
+        public override string CommandName => "IfNotEqual";
         private Subject<(List<string> args, bool result)> _onBranchEvaluated;
         public Observable<(List<string> args, bool result)> OnBranchEvaluated => _onBranchEvaluated ??= new Subject<(List<string> args, bool result)>();
 
-        public IfGreaterEqualCommand(ScenarioBranchRegistry branches)
+        public IfNotEqualCommand(ScenarioBranchRegistry branches)
         {
             _branches = branches;
         }
@@ -22,7 +22,7 @@ namespace ADVance.Command
             if (args.Count >= 2)
             {
                 var resolvedArgs = Manager.ResolveVariables(args);
-                result = _branches.Evaluate("GreaterOrEqual", resolvedArgs);
+                result = _branches.Evaluate("NotEqual", resolvedArgs);
             }
 
             _onBranchEvaluated?.OnNext((args, result));
