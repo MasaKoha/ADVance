@@ -4,7 +4,7 @@
     "references": [
         "ADVance",
         "Unity.TextMeshPro",
-        ""
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

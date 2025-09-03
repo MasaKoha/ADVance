@@ -2,19 +2,15 @@ using System.Collections.Generic;
 using ADVance.Base;
 using ADVance.Command;
 using ADVance.Data;
-using ADVance.Manager;
 using ADVance.Manager.Interface;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using R3;
 
-namespace ADVance
+namespace ADVance.Manager
 {
     public class ScenarioManager : ADVanceManagerBase
     {
-        [Header("Scenario Data")]
-        [SerializeField] private ScenarioData _scenarioData;
-
         [SerializeField] private AssetPreloadManager _assetPreloadManager;
 
         protected override void OnInitialize()
@@ -32,15 +28,15 @@ namespace ADVance
             SetupAssetPreloadSubscriptions();
         }
 
-        public async UniTask StartScenarioAsync()
+        public async UniTask StartScenarioAsync(ScenarioData scenarioData)
         {
-            if (_scenarioData == null)
+            if (scenarioData == null)
             {
                 Debug.LogError("Scenario data is not assigned!");
                 return;
             }
 
-            Load(_scenarioData.Lines);
+            Load(scenarioData.Lines);
             if (AssetRegistry.PreloadAssets.Count > 0)
             {
                 await ShowPreloadConfirmation();
@@ -87,25 +83,11 @@ namespace ADVance
             var choiceCommand = CommandRegistry.GetCommand<ChoiceCommand>();
             choiceCommand?.OnChoiceShow.Subscribe(ShowChoices).AddTo(destroyCancellationToken);
 
-            // IfGreaterEqualCommandの購読
-            var ifGreaterEqualCommand = CommandRegistry.GetCommand<IfGreaterEqualCommand>();
-            ifGreaterEqualCommand.OnBranchEvaluated.Subscribe(data =>
-            {
-                if (data.args.Count < 2)
-                {
-                    return;
-                }
-
-                var varName = data.args[0];
-                var value = data.args[1];
-                Debug.Log($"Checking: {varName}({GetVariableValue(varName)}) >= {value} = {data.result}");
-            }).AddTo(destroyCancellationToken);
-
             // PreloadAssetCommandの購読
             var preloadAssetCommand = CommandRegistry.GetCommand<PreloadAssetCommand>();
             preloadAssetCommand.OnAssetRegistered.Subscribe(assetData =>
             {
-                AssetRegistry.AddAsset(assetData.assetPath, assetData.estimatedSize);
+                AssetRegistry.AddAsset(assetData);
                 OnAssetRegistryUpdated.OnNext(AssetRegistry);
             }).AddTo(destroyCancellationToken);
 

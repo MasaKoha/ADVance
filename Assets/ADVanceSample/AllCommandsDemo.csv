@@ -1,0 +1,74 @@
+ID,Type,NextIDs,Args
+1,ShowText,2,ADVanceコマンドデモを開始します
+2,ShowText,3,--- 変数操作コマンド ---
+3,InitVariable,4,playerName,プレイヤー
+4,ShowText,5,プレイヤー名を初期化しました：${playerName}
+5,Set,6,score,0
+6,ShowText,7,スコアを設定しました：${score}
+7,Add,8,score,10
+8,ShowText,9,スコアに10を加算しました：${score}
+9,Add,10,score,-3
+10,ShowText,11,スコアから3を減算しました：${score}
+11,Print,12,score
+12,ShowText,13,--- 比較・分岐コマンド ---
+13,Set,14,testValue,15
+14,IfEqual,15|16,testValue,15
+15,ShowText,17,testValueは15と等しいです
+16,ShowText,17,testValueは15と等しくありません
+17,IfNotEqual,18|19,testValue,20
+18,ShowText,20,testValueは20と等しくありません
+19,ShowText,20,testValueは20と等しいです
+20,IfGreater,21|22,testValue,10
+21,ShowText,23,testValueは10より大きいです
+22,ShowText,23,testValueは10以下です
+23,IfGreaterEqual,24|25,testValue,15
+24,ShowText,26,testValueは15以上です
+25,ShowText,26,testValueは15未満です
+26,IfLess,27|28,testValue,20
+27,ShowText,29,testValueは20未満です
+28,ShowText,29,testValueは20以上です
+29,IfLessEqual,30|31,testValue,15
+30,ShowText,32,testValueは15以下です
+31,ShowText,32,testValueは15より大きいです
+32,ShowText,33,--- 選択肢・分岐コマンド ---
+33,Choice,34|35,playerChoice,冒険に出る,街で休む
+34,ShowText,36,冒険に出ることにしました！
+35,ShowText,36,街でゆっくり休むことにしました
+36,Print,37,playerChoice
+37,ShowText,38,--- 表示・UI関連コマンド ---
+38,ShowCharacter,39,character1.png
+39,ShowText,40,キャラクターを表示しました
+40,ShowBackground,41,background1.jpg
+41,ShowText,42,背景を変更しました
+42,HideCharacter,43,
+43,ShowText,44,キャラクターを非表示にしました
+44,ShowMenu,45,
+45,ShowText,46,メニューを表示しました
+46,HideMenu,47,
+47,ShowText,48,メニューを非表示にしました
+48,ShowText,49,--- オーディオコマンド ---
+49,PlayBGM,50,bgm_sample.mp3
+50,ShowText,51,BGMを再生しました
+51,PlaySE,52,se_sample.wav
+52,ShowText,53,効果音を再生しました
+53,PlayVoice,54,voice_sample.wav
+54,ShowText,55,ボイスを再生しました
+55,StopBGM,56,
+56,ShowText,57,BGMを停止しました
+57,ShowText,58,--- アセット・その他のコマンド ---
+58,PreloadAsset,59,character2.png,background2.jpg
+59,ShowText,60,アセットをプリロードしました
+60,Wait,61,2000
+61,ShowText,62,2秒間待機しました
+62,ShowText,63,--- 分岐コマンド ---
+63,Set,64,branchTest,1
+64,Branch,65|66|67,branchTest
+65,ShowText,68,分岐1が選択されました
+66,ShowText,68,分岐2が選択されました
+67,ShowText,68,分岐3が選択されました
+68,ShowText,69,--- 最終結果 ---
+69,ShowText,70,最終スコア：${score}
+70,ShowText,71,選択した行動：${playerChoice}
+71,ShowText,72,プレイヤー名：${playerName}
+72,ShowText,73,すべてのコマンドのデモが完了しました！
+73,Print,,score

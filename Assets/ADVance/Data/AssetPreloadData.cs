@@ -20,16 +20,12 @@ namespace ADVance.Data
     [Serializable]
     public class ScenarioAssetRegistry
     {
-        public List<AssetPreloadData> PreloadAssets = new List<AssetPreloadData>();
+        public List<AssetPreloadData> PreloadAssets = new();
         public long TotalEstimatedSize => CalculateTotalSize();
 
-        public void AddAsset(string assetPath, long estimatedSize = 0)
+        public void AddAsset(string assetPath)
         {
-            PreloadAssets.Add(new AssetPreloadData
-            {
-                AssetPath = assetPath,
-                EstimatedSize = estimatedSize,
-            });
+            PreloadAssets.Add(new AssetPreloadData { AssetPath = assetPath, });
         }
 
         public void ClearAssets()

@@ -1,5 +1,7 @@
 using ADVance;
 using ADVance.Command;
+using ADVance.Data;
+using ADVance.Manager;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using R3;
@@ -96,9 +98,9 @@ namespace ADVanceSample
             return result;
         }
 
-        public async UniTask StartScenarioAsync()
+        public async UniTask StartScenarioAsync(ScenarioData scenarioData)
         {
-            await _scenarioManager.StartScenarioAsync();
+            await _scenarioManager.StartScenarioAsync(scenarioData);
         }
     }
 }

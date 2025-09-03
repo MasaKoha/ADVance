@@ -13,21 +13,12 @@ namespace ADVance.Command
 
         public override async UniTask ExecuteCommandAsync(List<string> args)
         {
-            if (args.Count <= 0)
-            {
-                Manager.SetCurrentId(Manager.GetNextLineId());
-                await Manager.Wait();
-                return;
-            }
-
             var text = args[0];
             _onTextShow?.OnNext(text);
 
             var nextId = Manager.GetNextLineId();
             Manager.SetWaitingForInput(true);
             Manager.SetCurrentId(nextId);
-
-            // 入力待ち
             while (Manager.IsWaitingForInput)
             {
                 await UniTask.Yield();

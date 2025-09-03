@@ -4,7 +4,9 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "ADVance"
+        "ADVance",
+        "R3.Unity",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
