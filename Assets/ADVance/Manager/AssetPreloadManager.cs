@@ -19,7 +19,7 @@ namespace ADVance.Manager
 
         public bool IsDownloading => _isDownloading;
 
-        public async UniTask<long> CalculateAssetSize(string assetPath)
+        public UniTask<long> CalculateAssetSize(string assetPath)
         {
             try
             {
@@ -33,13 +33,13 @@ namespace ADVance.Manager
                     if (asset == null)
                     {
                         Debug.LogWarning($"Asset not found in Resources: {resourcePath}");
-                        return 0;
+                        return UniTask.FromResult<long>(0);
                     }
 
                     // アセットの型に応じたサイズ推定
-                    long estimatedSize = EstimateAssetSize(asset);
+                    var estimatedSize = EstimateAssetSize(asset);
                     OnAssetSizeCalculated.OnNext(estimatedSize);
-                    return estimatedSize;
+                    return UniTask.FromResult(estimatedSize);
                 }
 
                 // StreamingAssetsやその他のパスの場合
@@ -50,17 +50,17 @@ namespace ADVance.Manager
                     {
                         var fileInfo = new FileInfo(fullPath);
                         OnAssetSizeCalculated.OnNext(fileInfo.Length);
-                        return fileInfo.Length;
+                        return UniTask.FromResult(fileInfo.Length);
                     }
                 }
 
                 Debug.LogWarning($"Cannot calculate size for asset: {assetPath}");
-                return 0;
+                return UniTask.FromResult<long>(0);
             }
             catch (System.Exception e)
             {
                 Debug.LogError($"Error calculating asset size for {assetPath}: {e.Message}");
-                return 0;
+                return UniTask.FromResult<long>(0);
             }
         }
 
@@ -132,39 +132,39 @@ namespace ADVance.Manager
             }
 
             return;
+        }
 
-            async UniTask<bool> LoadAssetAsync(AssetPreloadData assetData)
+        private UniTask<bool> LoadAssetAsync(AssetPreloadData assetData)
+        {
+            try
             {
-                try
+                if (_loadedAssets.ContainsKey(assetData.AssetPath))
                 {
-                    if (_loadedAssets.ContainsKey(assetData.AssetPath))
-                    {
-                        return true; // 既に読み込み済み
-                    }
-
-                    // Resourcesフォルダからの読み込み
-                    if (assetData.AssetPath.StartsWith("Resources/"))
-                    {
-                        var resourcePath = assetData.AssetPath.Substring("Resources/".Length);
-                        resourcePath = Path.ChangeExtension(resourcePath, null); // 拡張子を除去
-
-                        var asset = Resources.Load(resourcePath);
-                        if (asset != null)
-                        {
-                            _loadedAssets[assetData.AssetPath] = asset;
-                            assetData.CachedAsset = asset;
-                            return true;
-                        }
-                    }
-
-                    Debug.LogWarning($"Failed to load asset: {assetData.AssetPath}");
-                    return false;
+                    return UniTask.FromResult(true); // 既に読み込み済み
                 }
-                catch (System.Exception e)
+
+                // Resourcesフォルダからの読み込み
+                if (assetData.AssetPath.StartsWith("Resources/"))
                 {
-                    Debug.LogError($"Error loading asset {assetData.AssetPath}: {e.Message}");
-                    return false;
+                    var resourcePath = assetData.AssetPath.Substring("Resources/".Length);
+                    resourcePath = Path.ChangeExtension(resourcePath, null); // 拡張子を除去
+
+                    var asset = Resources.Load(resourcePath);
+                    if (asset != null)
+                    {
+                        _loadedAssets[assetData.AssetPath] = asset;
+                        assetData.CachedAsset = asset;
+                        return UniTask.FromResult(true);
+                    }
                 }
+
+                Debug.LogWarning($"Failed to load asset: {assetData.AssetPath}");
+                return UniTask.FromResult(false);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error loading asset {assetData.AssetPath}: {e.Message}");
+                return UniTask.FromResult(false);
             }
         }
 

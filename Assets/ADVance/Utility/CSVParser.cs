@@ -18,7 +18,7 @@ namespace ADVance.Utility
             return result;
         }
 
-        private static List<string> ParseLine(string line)
+        public static List<string> ParseLine(string line)
         {
             var fields = new List<string>();
             var stringBuilder = new StringBuilder();

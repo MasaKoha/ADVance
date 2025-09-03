@@ -23,7 +23,7 @@ namespace ADVance.Utility
                     continue;
                 }
 
-                var columns = line.Split(',');
+                var columns = CsvParser.ParseLine(line);
 
                 var scenarioLine = new ScenarioLine
                 {
@@ -34,7 +34,7 @@ namespace ADVance.Utility
                 };
 
                 // 4列目以降を Args に格納
-                for (var i = 3; i < columns.Length; i++)
+                for (var i = 3; i < columns.Count; i++)
                 {
                     scenarioLine.Args.Add(columns[i]);
                 }

@@ -33,7 +33,7 @@ namespace ADVanceSample
                 .AddTo(destroyCancellationToken);
 
             _scenarioUIController.OnStartDownload
-                .Subscribe(_ => { _scenarioManager.StartAssetDownload(); })
+                .Subscribe(_ => { _scenarioManager.StartAssetDownload().Forget(); })
                 .AddTo(destroyCancellationToken);
 
             _scenarioManager.OnScenarioEnded
@@ -53,7 +53,7 @@ namespace ADVanceSample
                 .AddTo(destroyCancellationToken);
 
             _scenarioManager.OnStartDownloadButtonInteractable
-                .Subscribe(value => { _scenarioUIController.SetStartDownloadButtonInteractable(true); })
+                .Subscribe(value => { _scenarioUIController.SetStartDownloadButtonInteractable(value); })
                 .AddTo(destroyCancellationToken);
 
             _scenarioManager.OnChoiceSelected

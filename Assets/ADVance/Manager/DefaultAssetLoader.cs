@@ -1,7 +1,9 @@
+using System;
 using System.IO;
 using ADVance.Data;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace ADVance.Manager
 {
@@ -24,8 +26,9 @@ namespace ADVance.Manager
 
                 return (false, null);
             }
-            catch (System.Exception e)
+            catch (Exception ex)
             {
+                Debug.LogError($"Error loading asset with DefaultAssetLoader: {ex.Message}");
                 return (false, null);
             }
         }
