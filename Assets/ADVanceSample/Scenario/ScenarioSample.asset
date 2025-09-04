@@ -15,72 +15,151 @@ MonoBehaviour:
   Lines:
   - ID: 1
     NextIDs: 01000000
-    CommandName: RequestAsset
+    CommandName: RequestSprite
     Args:
     - "\u7537\u6027"
     - man
   - ID: 2
     NextIDs: 01000000
-    CommandName: RequestAsset
+    CommandName: RequestSprite
     Args:
     - "\u5973\u60271"
     - women1
   - ID: 3
     NextIDs: 01000000
-    CommandName: RequestAsset
+    CommandName: RequestSprite
     Args:
     - "\u5973\u60272"
     - women2
   - ID: 4
     NextIDs: 01000000
+    CommandName: RequestSprite
+    Args:
+    - "\u80CC\u666F"
+    - background
+  - ID: 5
+    NextIDs: 01000000
     CommandName: LoadAll
     Args:
     - 
-  - ID: 5
+  - ID: 6
+    NextIDs: 01000000
+    CommandName: ShowBackground
+    Args:
+    - "\u80CC\u666F"
+    - 
+  - ID: 7
+    NextIDs: 01000000
+    CommandName: Task
+    Args:
+    - ATask
+    - ShowCharacter
+    - "\u7537\u6027"
+    - 100
+    - 0
+  - ID: 8
+    NextIDs: 01000000
+    CommandName: Task
+    Args:
+    - ATask
+    - PlayBGM
+    - theme_music
+  - ID: 9
+    NextIDs: 01000000
+    CommandName: Task
+    Args:
+    - ATask
+    - PlayVoice
+    - opening_line
+  - ID: 10
+    NextIDs: 01000000
+    CommandName: Exec
+    Args:
+    - ATask
+  - ID: 11
     NextIDs: 01000000
     CommandName: ShowText
     Args:
-    - "\u3053\u3093\u306B\u3061\u306F\u3001${name}\u3055\u3093\uFF01"
-  - ID: 6
+    - ${speaker}
+    - "\u3053\u3093\u306B\u3061\u306F\u3001${speaker}\u3055\u3093\uFF01"
+  - ID: 12
     NextIDs: 01000000
     CommandName: Set
     Args:
     - score
     - 15
-  - ID: 7
+  - ID: 13
     NextIDs: 01000000
     CommandName: ShowText
     Args:
+    - ${speaker}
     - "\u6BD4\u8F03\u30C6\u30B9\u30C8\u3092\u958B\u59CB\u3057\u307E\u3059"
-  - ID: 8
+  - ID: 14
+    NextIDs: 01000000
+    CommandName: Task
+    Args:
+    - BTask
+    - PlaySE
+    - correct_sound
+  - ID: 15
+    NextIDs: 01000000
+    CommandName: Task
+    Args:
+    - BTask
+    - ShowCharacter
+    - "\u5973\u60271"
+    - -100
+    - 0
+  - ID: 16
+    NextIDs: 01000000
+    CommandName: Task
+    Args:
+    - BTask
+    - ShowText
+    - ${speaker}
+    - "\u5F85\u6A5F\u3057\u307E\u3059"
+  - ID: 17
+    NextIDs: 01000000
+    CommandName: Exec
+    Args:
+    - BTask
+  - ID: 18
+    NextIDs: 01000000
+    CommandName: Wait
+    Args:
+    - 5.0
+  - ID: 19
     NextIDs: 0100000002000000
     CommandName: IfEqual
     Args:
     - like
     - 5
-  - ID: 9
+  - ID: 20
     NextIDs: 02000000
     CommandName: ShowText
     Args:
+    - ${speaker}
     - "like\u306F5\u3068\u7B49\u3057\u3044\u3067\u3059"
-  - ID: 10
+  - ID: 21
     NextIDs: 01000000
     CommandName: ShowText
     Args:
+    - ${speaker}
     - "like\u306F5\u3068\u7B49\u3057\u304F\u3042\u308A\u307E\u305B\u3093"
-  - ID: 11
+  - ID: 22
     NextIDs: 0100000001000000
     CommandName: Choice
     Args:
     - mood
     - "\u5143\u6C17\uFF01"
     - "\u666E\u901A\u304B\u306A"
-  - ID: 12
+  - ID: 23
     NextIDs: 01000000
     CommandName: ShowText
     Args:
+    - ${speaker}
     - "\u306A\u308B\u307B\u3069\u3001\u843D\u3061\u7740\u3044\u3066\u308B\u306D\u3002"
-  - ID: 13
+  - ID: 24
     NextIDs: 01000000
     CommandName: Finish
     Args:

@@ -40,11 +40,8 @@ namespace ADVance.Command
             }
 
             _onVariableInit?.OnNext((varName, value));
-            
-            // 次のIDに進む
-            var nextId = Manager.GetNextLineId();
-            Manager.SetCurrentId(nextId);
             await Manager.Wait();
+            Manager.SetNextLineId();
         }
     }
 }

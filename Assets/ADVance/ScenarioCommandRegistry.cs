@@ -36,6 +36,16 @@ namespace ADVance
 
             return null;
         }
+
+        public IReadOnlyCollection<string> GetAllCommandNames()
+        {
+            return _commands.Keys;
+        }
+
+        public bool HasCommand(string commandName)
+        {
+            return _commands.ContainsKey(commandName);
+        }
     }
 
     public class ScenarioBranchRegistry

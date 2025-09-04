@@ -55,14 +55,25 @@ namespace ADVanceSample
         {
             // ShowTextCommandの購読
             var showTextCommand = _scenarioManager.CommandRegistry.GetCommand<ShowTextCommand>();
-            showTextCommand.OnTextShow.Subscribe(ShowText).AddTo(destroyCancellationToken);
+            showTextCommand.OnTextShow
+                .Subscribe(ShowText)
+                .AddTo(destroyCancellationToken);
+
+            var showBackgroundCommand = _scenarioManager.CommandRegistry.GetCommand<ShowBackgroundCommand>();
+            showBackgroundCommand.OnShowBackground
+                .Subscribe(key =>
+                {
+                    var sprite = _scenarioManager.GetSpriteAsset(key);
+                    _scenarioUIController.ShowBackground(sprite);
+                })
+                .AddTo(destroyCancellationToken);
         }
 
-        private void ShowText(string text)
+        private void ShowText(ShowTextParameter textParameter)
         {
             // 変数置換処理
-            var processedText = ProcessVariables(text);
-            _scenarioUIController.ShowText(processedText);
+            var processedText = ProcessVariables(textParameter.Text);
+            _scenarioUIController.ShowText(textParameter.Speaker, processedText);
         }
 
 
@@ -84,6 +95,8 @@ namespace ADVanceSample
 
         public void StartScenario(ScenarioData scenarioData)
         {
+            // シナリオ開始前にspeaker変数を設定
+            _scenarioManager.SetVariable("speaker", "masakoha");
             _scenarioManager.StartScenario(scenarioData);
         }
     }

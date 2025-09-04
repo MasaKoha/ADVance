@@ -30,7 +30,7 @@ namespace ADVance.Command
 
             // 既存の変数値を取得
             var oldValue = Manager.Variables.TryGetValue(varName, out var currentValue) ? currentValue : 0;
-            
+
             // 現在の値を数値として解析
             float currentNumValue = 0;
             if (currentValue != null)
@@ -51,7 +51,7 @@ namespace ADVance.Command
 
             // 新しい値を計算
             var newValue = currentNumValue + addValue;
-            
+
             // 整数として保存するか小数として保存するかを判定
             object finalValue;
             if (newValue == (int)newValue)
@@ -64,8 +64,7 @@ namespace ADVance.Command
             }
 
             // 変数を更新
-            Manager.Variables[varName] = finalValue;
-
+            Manager.SetVariable(varName, finalValue);
             _onVariableAdded?.OnNext((varName, oldValue, finalValue));
             Manager.SetCurrentId(Manager.GetNextLineId());
             return UniTask.CompletedTask;

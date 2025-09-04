@@ -1,14 +1,28 @@
 Type,NextIDs,Args
-RequestAsset,1,男性,man
-RequestAsset,1,女性1,women1
-RequestAsset,1,女性2,women2
-LoadAll,1,
-ShowText,1,こんにちは、${name}さん！
-Set,1,score,15
-ShowText,1,比較テストを開始します
+## リソース読み込み
+RequestSprite,,男性,man
+RequestSprite,,女性1,women1
+RequestSprite,,女性2,women2
+RequestSprite,,背景,background
+LoadAll,,
+## シナリオ開始
+ShowBackground,,背景,
+Task,,ATask,ShowCharacter,男性,100,0
+Task,,ATask,PlayBGM,theme_music
+Task,,ATask,PlayVoice,opening_line
+Exec,,ATask
+ShowText,,${speaker},こんにちは、${speaker}さん！
+Set,,score,15
+ShowText,,${speaker},比較テストを開始します
+Task,,BTask,PlaySE,correct_sound
+Task,,BTask,ShowCharacter,女性1,-100,0
+Task,,BTask,ShowText,${speaker},待機します
+Exec,,BTask
+Wait,,5.0
+// 条件分岐は第二引数に複数のIDを指定可能。trueなら1行あと、falseなら2行あとに分岐
 IfEqual,1|2,like,5
-ShowText,2,likeは5と等しいです
-ShowText,1,likeは5と等しくありません
+ShowText,2,${speaker},likeは5と等しいです
+ShowText,1,${speaker},likeは5と等しくありません
 Choice,1|1,mood,元気！,普通かな
-ShowText,1,なるほど、落ち着いてるね。
-Finish,1,
+ShowText,,${speaker},なるほど、落ち着いてるね。
+Finish,,
