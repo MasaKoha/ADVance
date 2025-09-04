@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ADVance.AssetLoader;
 using ADVance.Command;
 using ADVance.Command.Interface;
 using ADVance.Command.Operator;
@@ -28,12 +29,15 @@ namespace ADVance.Base
         private readonly Subject<(int choiceIndex, string label)> _onChoiceSelected = new();
         public Observable<(int choiceIndex, string label)> OnChoiceSelected => _onChoiceSelected;
         private readonly Subject<ScenarioAssetRegistry> _onAssetRegistryUpdated = new();
-        public Subject<ScenarioAssetRegistry> OnAssetRegistryUpdated => _onAssetRegistryUpdated;
+        public Observable<ScenarioAssetRegistry> OnAssetRegistryUpdated => _onAssetRegistryUpdated;
         private readonly Subject<Unit> _onScenarioEnded = new();
         public Observable<Unit> OnScenarioEnded => _onScenarioEnded;
+        protected AssetLoaderBase AssetLoader { get; private set; }
+        public async UniTask LoadAllAsset() => await AssetLoader.LoadAllAssets();
 
-        public void Initialize()
+        public void Initialize(AssetLoaderBase assetLoader = null)
         {
+            AssetLoader = assetLoader ?? new UnityResourceLoader();
             RegisterCommands();
             OnInitialize();
         }
@@ -55,7 +59,8 @@ namespace ADVance.Base
             RegisterCommand(new SetCommand());
             RegisterCommand(new AddCommand());
             RegisterCommand(new PrintCommand());
-            RegisterCommand(new PreloadAssetCommand());
+            RegisterCommand(new RequestAssetCommand());
+            RegisterCommand(new LoadAllAssetCommand());
             RegisterCommand(new ShowCharacterCommand());
             RegisterCommand(new ShowBackgroundCommand());
             RegisterCommand(new PlayVoiceCommand());
@@ -63,6 +68,7 @@ namespace ADVance.Base
             RegisterCommand(new PlaySECommand());
             RegisterCommand(new ShowMenuCommand());
             RegisterCommand(new WaitCommand());
+            RegisterCommand(new FinishCommand());
             RegisterBranch(new EqualCommand());
             RegisterBranch(new NotEqualCommand());
             RegisterBranch(new GreaterCommand());
@@ -78,9 +84,10 @@ namespace ADVance.Base
 
         private int GetNextId(ScenarioLine line, int? branchIndex = null)
         {
-            if (line.NextIDs is not { Count: > 0 })
+            var ids = line?.NextIDs;
+            if (ids is not { Count: > 0 })
             {
-                return line.ID + 1;
+                return (line?.ID ?? _currentId) + 1;
             }
 
             var index = branchIndex ?? 0;
@@ -89,19 +96,24 @@ namespace ADVance.Base
                 return line.ID + 1;
             }
 
-            var nextId = line.NextIDs[index];
-            if (nextId > 0)
-            {
-                return nextId;
-            }
-
-            // NextIDsがない、または無効な場合は自動的に次の行(ID+1)へ
-            return line.ID + 1;
+            var relativeOffset = line.NextIDs[index];
+            return relativeOffset > 0 ? line.ID + relativeOffset : line.ID + 1;
         }
 
         public List<string> ResolveVariables(List<string> args)
         {
-            return args.Select(arg => Variables.TryGetValue(arg, out var variable) ? variable.ToString() : arg).ToList();
+            if (args == null || args.Count == 0)
+            {
+                return new List<string>();
+            }
+
+            var result = new List<string>(args.Count);
+            for (var i = 0; i < args.Count; i++)
+            {
+                result.Add(Variables.TryGetValue(args[i], out var variable) ? variable.ToString() : args[i]);
+            }
+
+            return result;
         }
 
         public void SetWaitingForInput(bool waiting)
@@ -125,7 +137,7 @@ namespace ADVance.Base
             _commands.Register(command);
         }
 
-        public void RegisterBranch(IScenarioBranchEvaluator evaluator)
+        protected void RegisterBranch(IScenarioBranchEvaluator evaluator)
         {
             _branches.Register(evaluator);
         }
@@ -138,43 +150,43 @@ namespace ADVance.Base
 
         public void Load(List<ScenarioLine> lines, int startId = 1)
         {
-            _lines = lines.ToDictionary(x => x.ID);
+            _lines = lines?.ToDictionary(x => x.ID) ?? new Dictionary<int, ScenarioLine>();
             _currentId = startId;
-            _isScenarioEnded = false; // 新しいシナリオ開始時に終了フラグをリセット
+            _isScenarioEnded = false;
             ProceedAsync().Forget();
         }
 
         public virtual void Select(int choiceIndex)
         {
-            var current = _lines[_currentId];
-            if (current.CommandName != "Choice")
+            if (!_lines.TryGetValue(_currentId, out var current) || current.CommandName != "Choice")
             {
                 return;
             }
 
-            var choices = current.Args.Skip(1).ToList();
+            var choices = current.Args?.Skip(1).ToList();
+            if (choices == null || choiceIndex < 0 || choiceIndex >= choices.Count)
+            {
+                return;
+            }
+
             _onChoiceSelected.OnNext((choiceIndex, choices[choiceIndex]));
             _currentId = GetNextId(current, choiceIndex);
-
-            // 入力待ちを解除してChoiceCommand内のWait()を継続させる
             IsWaitingForInput = false;
         }
 
         private async UniTask ProceedAsync()
         {
-            while (_lines.TryGetValue(_currentId, out var line))
+            while (!_isScenarioEnded && _lines.TryGetValue(_currentId, out var line))
             {
                 _onLineExecuted.OnNext(line);
                 await _commands.ExecuteAsync(line.CommandName, line.Args);
                 await UniTask.Yield();
             }
+        }
 
-            // シナリオが既に終了している場合は、複数回の終了イベントを防ぐ
-            if (!_isScenarioEnded)
-            {
-                _isScenarioEnded = true;
-                _onScenarioEnded.OnNext(Unit.Default);
-            }
+        public void Stop()
+        {
+            _isScenarioEnded = true;
         }
 
         public void SetCurrentId(int id)
@@ -182,15 +194,25 @@ namespace ADVance.Base
             _currentId = id;
         }
 
-        public ScenarioLine GetCurrentScenarioLine()
-        {
-            return GetCurrentLine();
-        }
-
         public int GetNextLineId(int? branchIndex = null)
         {
-            var line = GetCurrentLine();
-            return GetNextId(line, branchIndex);
+            return GetNextId(GetCurrentLine(), branchIndex);
+        }
+
+        public void SetNextLineId()
+        {
+            _currentId = GetNextLineId();
+        }
+
+        protected void OnScenarioFinished()
+        {
+            if (_isScenarioEnded)
+            {
+                return;
+            }
+
+            _isScenarioEnded = true;
+            _onScenarioEnded.OnNext(Unit.Default);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace ADVance.Utility
 
             using var reader = new StringReader(csvFile.text);
             var isFirstLine = true;
+            var lineIndex = 1; // 1から始まるIDを自動生成
 
             while (reader.ReadLine() is { } line)
             {
@@ -27,14 +28,14 @@ namespace ADVance.Utility
 
                 var scenarioLine = new ScenarioLine
                 {
-                    ID = int.Parse(columns[0]),
-                    CommandName = columns[1],
-                    NextIDs = ParseNextIDs(columns[2]),
+                    ID = lineIndex++, // 行番号を自動生成
+                    CommandName = columns[0], // 1列目はCommandName
+                    NextIDs = ParseNextIDs(columns[1]), // 2列目はNextIDs
                     Args = new List<string>()
                 };
 
-                // 4列目以降を Args に格納
-                for (var i = 3; i < columns.Count; i++)
+                // 3列目以降を Args に格納
+                for (var i = 2; i < columns.Count; i++)
                 {
                     scenarioLine.Args.Add(columns[i]);
                 }

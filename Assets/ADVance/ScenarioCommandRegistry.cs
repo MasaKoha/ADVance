@@ -24,11 +24,6 @@ namespace ADVance
             return true;
         }
 
-        public IScenarioCommandAsync GetCommand(string commandName)
-        {
-            return _commands.GetValueOrDefault(commandName);
-        }
-
         public T GetCommand<T>() where T : class, IScenarioCommandAsync
         {
             foreach (var command in _commands.Values)
@@ -38,6 +33,7 @@ namespace ADVance
                     return typedCommand;
                 }
             }
+
             return null;
         }
     }

@@ -1,6 +1,5 @@
 using ADVance.Data;
 using ADVanceSample;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace ADVance.Sample
@@ -16,7 +15,7 @@ namespace ADVance.Sample
         private void Start()
         {
             _scenarioController.Initialize();
-            _scenarioController.StartScenarioAsync(_scenarioData).Forget();
+            _scenarioController.StartScenario(_scenarioData);
         }
     }
 }

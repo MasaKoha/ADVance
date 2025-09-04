@@ -34,24 +34,8 @@ namespace ADVanceSample
                 .Subscribe(index => { _scenarioManager.Select(index); })
                 .AddTo(destroyCancellationToken);
 
-            _scenarioUIController.OnStartDownload
-                .Subscribe(_ => { _scenarioManager.StartAssetDownload().Forget(); })
-                .AddTo(destroyCancellationToken);
-
             _scenarioManager.OnScenarioEnded
                 .Subscribe(_ => { Debug.Log("Complete"); })
-                .AddTo(destroyCancellationToken);
-
-            _scenarioManager.OnShowAssetSize
-                .Subscribe(value =>
-                {
-                    var sizeText = $"ダウンロード予定サイズ: {value.size}\n" + $"アセット数: {value.count}個";
-                    _scenarioUIController.ShowPreloadConfirmation(sizeText);
-                })
-                .AddTo(destroyCancellationToken);
-
-            _scenarioManager.OnChangedDownloadProgress
-                .Subscribe(progress => { _scenarioUIController.UpdateDownloadProgress(progress); })
                 .AddTo(destroyCancellationToken);
 
             _scenarioManager.OnStartDownloadButtonInteractable
@@ -98,9 +82,9 @@ namespace ADVanceSample
             return result;
         }
 
-        public async UniTask StartScenarioAsync(ScenarioData scenarioData)
+        public void StartScenario(ScenarioData scenarioData)
         {
-            await _scenarioManager.StartScenarioAsync(scenarioData);
+            _scenarioManager.StartScenario(scenarioData);
         }
     }
 }

@@ -19,9 +19,4 @@ namespace ADVance.Manager.Interface
         T GetLoadedAsset<T>(string assetPath) where T : Object;
         void ClearLoadedAssets();
     }
-
-    public interface IAssetLoader
-    {
-        UniTask<(bool success, Object asset)> LoadAssetAsync(AssetPreloadData assetData);
-    }
 }
