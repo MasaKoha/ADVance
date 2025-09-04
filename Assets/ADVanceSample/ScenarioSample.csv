@@ -1,39 +1,14 @@
-ID,Type,NextIDs,Args
-1,ShowText,2,こんにちは、${name}さん！
-2,Set,3,like,5
-3,Set,4,score,15
-4,ShowText,5,比較テストを開始します
-5,IfEqual,6|7,like,5
-6,ShowText,8,likeは5と等しいです
-7,ShowText,8,likeは5と等しくないです
-8,IfNotEqual,9|10,like,10
-9,ShowText,11,likeは10と等しくないです
-10,ShowText,11,likeは10と等しいです
-11,IfGreater,12|13,score,10
-12,ShowText,14,scoreは10より大きいです
-13,ShowText,14,scoreは10以下です
-14,IfGreaterEqual,15|16,score,15
-15,ShowText,17,scoreは15以上です
-16,ShowText,17,scoreは15未満です
-17,IfLess,18|19,like,10
-18,ShowText,20,likeは10未満です
-19,ShowText,20,likeは10以上です
-20,IfLessEqual,21|22,like,5
-21,ShowText,23,likeは5以下です
-22,ShowText,23,likeは5より大きいです
-23,ShowText,24,Add コマンドのテストを開始します
-24,Add,25,like,3
-25,ShowText,26,like に 3 を加算しました
-26,Print,27,like
-27,Add,28,like,-2
-28,ShowText,29,like から 2 を減算しました
-29,Print,30,like
-30,Add,31,score,-5
-31,ShowText,32,score から 5 を減算しました
-32,Print,33,score
-33,Add,34,newValue,100
-34,ShowText,35,新しい変数 newValue に 100 を設定しました
-35,Print,36,newValue
-36,Choice,37|38,mood,元気！,普通かな
-37,ShowText,39,元気そうで安心した！
-38,ShowText,39,なるほど、落ち着いてるね。
+Type,NextIDs,Args
+RequestAsset,1,男性,man
+RequestAsset,1,女性1,women1
+RequestAsset,1,女性2,women2
+LoadAll,1,
+ShowText,1,こんにちは、${name}さん！
+Set,1,score,15
+ShowText,1,比較テストを開始します
+IfEqual,1|2,like,5
+ShowText,2,likeは5と等しいです
+ShowText,1,likeは5と等しくありません
+Choice,1|1,mood,元気！,普通かな
+ShowText,1,なるほど、落ち着いてるね。
+Finish,1,

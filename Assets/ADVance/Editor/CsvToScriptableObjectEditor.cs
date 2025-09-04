@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using ADVance.Utility;
+using ADVance.Data;
 
 namespace ADVance.Editor
 {
@@ -9,6 +10,7 @@ namespace ADVance.Editor
         private TextAsset _csvFile;
         private CsvImportSettings _settings;
         private string _fileName = "NewScenarioData";
+        private ScenarioData _existingScenarioData;
 
         [MenuItem("Tools/ADVance/CSV to ScriptableObject")]
         public static void ShowWindow()
@@ -28,6 +30,10 @@ namespace ADVance.Editor
 
             _fileName = EditorGUILayout.TextField("File Name", _fileName);
 
+            EditorGUILayout.Space();
+            GUILayout.Label("Overwrite Existing ScriptableObject", EditorStyles.boldLabel);
+            _existingScenarioData = (ScenarioData)EditorGUILayout.ObjectField("Existing ScenarioData", _existingScenarioData, typeof(ScenarioData), false);
+
             if (GUILayout.Button("Generate ScriptableObject"))
             {
                 if (_csvFile != null)
@@ -42,6 +48,27 @@ namespace ADVance.Editor
                 else
                 {
                     EditorUtility.DisplayDialog("Error", "Please select a CSV file.", "OK");
+                }
+            }
+
+            if (GUILayout.Button("Overwrite Existing ScriptableObject"))
+            {
+                if (_csvFile != null && _existingScenarioData != null)
+                {
+                    var newData = CsvImporter.ImportFromCsv(_csvFile);
+                    
+                    _existingScenarioData.Lines = newData.Lines;
+                    
+                    EditorUtility.SetDirty(_existingScenarioData);
+                    AssetDatabase.SaveAssets();
+                    EditorUtility.DisplayDialog("Success", "ScriptableObject has been overwritten!", "OK");
+                }
+                else
+                {
+                    if (_csvFile == null)
+                        EditorUtility.DisplayDialog("Error", "Please select a CSV file.", "OK");
+                    else
+                        EditorUtility.DisplayDialog("Error", "Please select an existing ScriptableObject to overwrite.", "OK");
                 }
             }
         }
