@@ -45,7 +45,7 @@ namespace ADVance.Manager
             // SetCommandの購読
             var setCommand = CommandRegistry.GetCommand<SetCommand>();
             setCommand.OnVariableSet
-                .Subscribe(varData => { Variables[varData.varName] = varData.value; })
+                .Subscribe(varData => { SetVariable(varData.varName, varData.value); })
                 .AddTo(destroyCancellationToken);
 
             // PrintCommandの購読
@@ -62,14 +62,19 @@ namespace ADVance.Manager
 
             // PreloadAssetCommandの購読
             var preloadAssetCommand = CommandRegistry.GetCommand<RequestAssetCommand>();
-            preloadAssetCommand.OnReserveLoadAsset
-                .Subscribe(assetData => { AssetLoader.ReserveAssetLoad(assetData.Key, assetData.AssetPath); })
+            preloadAssetCommand.OnRequestLoadAsset
+                .Subscribe(assetData => { AssetLoader.RequestAssetLoad(assetData.Key, assetData.AssetPath); })
+                .AddTo(destroyCancellationToken);
+
+            var requestSpriteCommand = CommandRegistry.GetCommand<RequestSpriteCommand>();
+            requestSpriteCommand.OnRequestLoadSpriteAsset
+                .Subscribe(assetData => { AssetLoader.RequestSpriteAsset(assetData.Key, assetData.AssetPath); })
                 .AddTo(destroyCancellationToken);
 
             // InitVariableCommandの購読
             var initVariableCommand = CommandRegistry.GetCommand<InitVariableCommand>();
             initVariableCommand.OnVariableInit
-                .Subscribe(varData => { Variables[varData.varName] = varData.value; })
+                .Subscribe(varData => { SetVariable(varData.varName, varData.value); })
                 .AddTo(destroyCancellationToken);
 
             // FinishCommandの購読
@@ -110,10 +115,20 @@ namespace ADVance.Manager
             {
                 var varName = current.Args[0];
                 var selectedChoice = current.Args[choiceIndex + 1];
-                Variables[varName] = selectedChoice;
+                SetVariable(varName, selectedChoice);
             }
 
             base.Select(choiceIndex);
+        }
+
+        public T GetAsset<T>(string key) where T : Object
+        {
+            return AssetLoader.GetAsset<T>(key);
+        }
+
+        public Sprite GetSpriteAsset(string key)
+        {
+            return AssetLoader.GetSpriteAsset(key);
         }
     }
 }

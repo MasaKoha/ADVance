@@ -11,11 +11,26 @@ namespace ADVance.Editor
         private CsvImportSettings _settings;
         private string _fileName = "NewScenarioData";
         private ScenarioData _existingScenarioData;
+        private ScenarioCommandRegistry _commandRegistry;
 
         [MenuItem("Tools/ADVance/CSV to ScriptableObject")]
         public static void ShowWindow()
         {
             GetWindow<CsvToScriptableObjectEditor>("CSV to ScriptableObject");
+        }
+
+        private void CreateCommandRegistry()
+        {
+            if (_commandRegistry != null)
+            {
+                return;
+            }
+
+            // 一時的なADVanceManagerを作成してコマンドレジストリを初期化
+            var tempManager = new GameObject().AddComponent<TempADVanceManager>();
+            tempManager.Initialize();
+            _commandRegistry = tempManager.CommandRegistry;
+            DestroyImmediate(tempManager.gameObject);
         }
 
         private void OnGUI()
@@ -38,12 +53,19 @@ namespace ADVance.Editor
             {
                 if (_csvFile != null)
                 {
-                    var scenarioData = CsvImporter.ImportFromCsv(_csvFile);
-                    string path = System.IO.Path.Combine(outputFolder, _fileName + ".asset");
-
-                    AssetDatabase.CreateAsset(scenarioData, path);
-                    AssetDatabase.SaveAssets();
-                    EditorUtility.DisplayDialog("Success", "ScriptableObject has been created!", "OK");
+                    try
+                    {
+                        CreateCommandRegistry();
+                        var scenarioData = CsvImporter.ImportFromCsv(_csvFile, _commandRegistry);
+                        var path = System.IO.Path.Combine(outputFolder, _fileName + ".asset");
+                        AssetDatabase.CreateAsset(scenarioData, path);
+                        AssetDatabase.SaveAssets();
+                        EditorUtility.DisplayDialog("Success", "ScriptableObject has been created!", "OK");
+                    }
+                    catch (System.ArgumentException ex)
+                    {
+                        EditorUtility.DisplayDialog("Command Validation Error", ex.Message, "OK");
+                    }
                 }
                 else
                 {
@@ -55,13 +77,21 @@ namespace ADVance.Editor
             {
                 if (_csvFile != null && _existingScenarioData != null)
                 {
-                    var newData = CsvImporter.ImportFromCsv(_csvFile);
-                    
-                    _existingScenarioData.Lines = newData.Lines;
-                    
-                    EditorUtility.SetDirty(_existingScenarioData);
-                    AssetDatabase.SaveAssets();
-                    EditorUtility.DisplayDialog("Success", "ScriptableObject has been overwritten!", "OK");
+                    try
+                    {
+                        CreateCommandRegistry();
+                        var newData = CsvImporter.ImportFromCsv(_csvFile, _commandRegistry);
+
+                        _existingScenarioData.Lines = newData.Lines;
+
+                        EditorUtility.SetDirty(_existingScenarioData);
+                        AssetDatabase.SaveAssets();
+                        EditorUtility.DisplayDialog("Success", "ScriptableObject has been overwritten!", "OK");
+                    }
+                    catch (System.ArgumentException ex)
+                    {
+                        EditorUtility.DisplayDialog("Command Validation Error", ex.Message, "OK");
+                    }
                 }
                 else
                 {

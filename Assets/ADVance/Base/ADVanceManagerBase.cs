@@ -17,7 +17,8 @@ namespace ADVance.Base
         private readonly ScenarioCommandRegistry _commands = new();
         private readonly ScenarioBranchRegistry _branches = new();
         private int _currentId;
-        public readonly Dictionary<string, object> Variables = new();
+        private readonly Dictionary<string, object> _variables = new();
+        public IReadOnlyDictionary<string, object> Variables => _variables;
         public bool IsWaitingForInput { get; private set; } = false;
         private bool _isScenarioEnded = false;
         protected readonly ScenarioAssetRegistry _assetRegistry = new();
@@ -34,12 +35,19 @@ namespace ADVance.Base
         public Observable<Unit> OnScenarioEnded => _onScenarioEnded;
         protected AssetLoaderBase AssetLoader { get; private set; }
         public async UniTask LoadAllAsset() => await AssetLoader.LoadAllAssets();
+        private readonly Dictionary<string, GameObject> _showCharacters = new();
+        public IReadOnlyDictionary<string, GameObject> ShowCharacters => _showCharacters;
 
         public void Initialize(AssetLoaderBase assetLoader = null)
         {
             AssetLoader = assetLoader ?? new UnityResourceLoader();
             RegisterCommands();
             OnInitialize();
+        }
+
+        public void SetCharacter(string targetCharacterName, GameObject characterInstance)
+        {
+            _showCharacters[targetCharacterName] = characterInstance;
         }
 
         protected abstract void OnInitialize();
@@ -60,6 +68,7 @@ namespace ADVance.Base
             RegisterCommand(new AddCommand());
             RegisterCommand(new PrintCommand());
             RegisterCommand(new RequestAssetCommand());
+            RegisterCommand(new RequestSpriteCommand());
             RegisterCommand(new LoadAllAssetCommand());
             RegisterCommand(new ShowCharacterCommand());
             RegisterCommand(new ShowBackgroundCommand());
@@ -69,6 +78,8 @@ namespace ADVance.Base
             RegisterCommand(new ShowMenuCommand());
             RegisterCommand(new WaitCommand());
             RegisterCommand(new FinishCommand());
+            RegisterCommand(new TaskCommand());
+            RegisterCommand(new ExecCommand());
             RegisterBranch(new EqualCommand());
             RegisterBranch(new NotEqualCommand());
             RegisterBranch(new GreaterCommand());
@@ -100,6 +111,11 @@ namespace ADVance.Base
             return relativeOffset > 0 ? line.ID + relativeOffset : line.ID + 1;
         }
 
+        public void SetVariable(string key, object value)
+        {
+            _variables[key] = value;
+        }
+
         public List<string> ResolveVariables(List<string> args)
         {
             if (args == null || args.Count == 0)
@@ -110,7 +126,7 @@ namespace ADVance.Base
             var result = new List<string>(args.Count);
             for (var i = 0; i < args.Count; i++)
             {
-                result.Add(Variables.TryGetValue(args[i], out var variable) ? variable.ToString() : args[i]);
+                result.Add(_variables.TryGetValue(args[i], out var variable) ? variable.ToString() : args[i]);
             }
 
             return result;

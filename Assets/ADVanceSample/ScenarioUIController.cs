@@ -11,23 +11,27 @@ namespace ADVance
 {
     public class ScenarioUIController : MonoBehaviour
     {
-        [Header("Dialog UI")]
-        [SerializeField] private TextMeshProUGUI _text;
+        [SerializeField] private Image _backgroundImage;
 
-        [SerializeField] private Button _nextButton;
+        [Header("Dialog UI")]
+        [SerializeField] private TextMeshProUGUI _text = null;
+
+        [SerializeField] private TextMeshProUGUI _speakerNameText = null;
+
+        [SerializeField] private Button _nextButton = null;
 
         [Header("Choice UI")]
-        [SerializeField] private Button[] _choiceButtons;
+        [SerializeField] private Button[] _choiceButtons = null;
 
-        [SerializeField] private GameObject _choicePanel;
+        [SerializeField] private GameObject _choicePanel = null;
 
         [Header("Asset Preload UI")]
-        [SerializeField] private GameObject _preloadPanel;
+        [SerializeField] private GameObject _preloadPanel = null;
 
-        [SerializeField] private TextMeshProUGUI _preloadSizeText;
-        [SerializeField] private Button _startDownloadButton;
-        [SerializeField] private Slider _downloadProgressSlider;
-        [SerializeField] private TextMeshProUGUI _downloadProgressText;
+        [SerializeField] private TextMeshProUGUI _preloadSizeText = null;
+        [SerializeField] private Button _startDownloadButton = null;
+        [SerializeField] private Slider _downloadProgressSlider = null;
+        [SerializeField] private TextMeshProUGUI _downloadProgressText = null;
 
         [Header("Text Animation Settings")]
         [SerializeField] private float _charactersPerSecond = 20f;
@@ -105,8 +109,9 @@ namespace ADVance
                 .AddListener(() => _onStartDownload.OnNext(Unit.Default));
         }
 
-        public void ShowText(string text)
+        public void ShowText(string speaker, string text)
         {
+            _speakerNameText.text = speaker;
             _currentDisplayText = text;
             if (_typewriterCancellationTokenSource != null)
             {
@@ -239,6 +244,11 @@ namespace ADVance
             _typewriterCancellationTokenSource?.Cancel();
             _typewriterCancellationTokenSource?.Dispose();
             _disposables?.Dispose();
+        }
+
+        public void ShowBackground(Sprite sprite)
+        {
+            _backgroundImage.sprite = sprite;
         }
     }
 }
