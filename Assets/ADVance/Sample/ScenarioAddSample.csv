@@ -1,0 +1,7 @@
+Type,NextIDs,Args
+ShowText,,${player},追加シナリオですよ、${player}さん！
+ShowText,,${player},これはもしかしてうまくいきました？
+Choice,1|2,選択1,選択2
+ShowText,2,${player},選択1を選びましたね！
+ShowText,1,${player},選択2を選びましたね！
+Finish,,

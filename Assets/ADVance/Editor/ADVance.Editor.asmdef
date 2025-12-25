@@ -1,0 +1,18 @@
+{
+    "name": "ADVance.Editor",
+    "rootNamespace": "ADVance.Editor",
+    "references": [
+        "GUID:895ccfacd42cb4d2486148cd10534fec"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

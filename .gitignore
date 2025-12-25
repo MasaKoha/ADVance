@@ -109,3 +109,5 @@ Assets/NuGet.config.meta
 Assets/ExternalAsset
 Assets/ExternalAsset.meta
 .DS_Store
+/Assets/_Sandbox
+/Assets/_Sandbox.meta

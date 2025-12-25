@@ -1,0 +1,51 @@
+Type,NextIDs,Args
+## コメントアウト
+// これもコメントアウト
+## リソース読み込み
+// 画像のリソースを読んでいるが、ここは各自で用意してください
+RequestSprite,,男性,man
+RequestSprite,,女性1,women1
+RequestSprite,,背景,background
+RequestSprite,,アイコン1,icon1
+RequestSprite,,アイコン2,icon2
+LoadAll,,
+## シナリオ開始
+ShowBackground,,背景,
+FadeOut,,1.0,000000
+ShowText,,${player},シナリオサンプルへようこそ、${player}さん！
+ShowCharacter,,男性,0,0
+MoveCharacter,,男性,400,0,2.0
+// キャラクター、アイコン、背景、スチルの色味をセピア色に変更します
+Sepia,,true
+ShowIcon,,アイコン1,400,0
+// ${player} はシナリオが動く前に実装される変数
+ShowText,,${player},こんにちは、${player}さん！
+// キャラクター、アイコン、背景、スチルの色味をグレー色に変更します
+Gray,,true
+ShowIcon,,アイコン2,-100,0
+Set,,score,15
+Choice,1|2,"Add 5","Add -10"
+Add,2,score,5
+Add,1,score,-10
+ShowText,,${player},あなたのscoreは${score}です
+HideCharacter,,男性
+ShowCharacter,,女性1,100,400
+// キャラクター、アイコン、背景、スチルの色味を元に戻します
+Gray,,false
+ShowText,,${player},比較テストを開始します
+// Task を登録する。ATask は任意の名前で、ATask を Exec で実行すると、登録した ATask が同時実行される
+// ここは本来 SE の再生とテキスト表示を同時に行う例
+Task,,ATask,PlaySE,correct_sound
+Task,,ATask,ShowText,${player},待機します
+Exec,,ATask
+// 条件分岐は第二引数に複数のIDを指定可能。trueなら1行あと、falseなら2行あとに分岐
+IfEqual,1|2,like,5
+ShowText,2,${player},likeは5と等しいです
+ShowText,1,${player},likeは5と等しくありません
+Wait,,5.0
+Choice,1|1,元気！,普通かな
+ShowText,,${player},なるほど、落ち着いてるね。
+ShowStill,,スチル1
+Call,,Test
+FadeIn,,1.0
+Finish,,
