@@ -1,0 +1,127 @@
+using System.Collections.Generic;
+using ADVance.Base;
+using ADVance.Command;
+using ADVance.Data;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+using R3;
+
+namespace ADVance.Manager
+{
+    public class ScenarioManager : ADVanceManagerBase
+    {
+        protected override void OnInitialize()
+        {
+            SetupCore();
+        }
+
+        private void SetupCore()
+        {
+            // シナリオラインの実行を監視
+            OnLineExecuted.Subscribe(OutPutLineLog).AddTo(destroyCancellationToken);
+            // コマンドのObservableを購読
+            SubscribeToCommands();
+        }
+
+        public void StartScenario(ScenarioData scenarioData)
+        {
+            if (scenarioData == null)
+            {
+                Debug.LogError("Scenario data is not assigned!");
+                return;
+            }
+
+            Load(scenarioData.Lines);
+        }
+
+        private void OutPutLineLog(ScenarioLine line)
+        {
+            var args = line.Args != null ? string.Join(", ", line.Args) : "no args";
+            Debug.Log($"Executing: {line.CommandName} - {args}");
+        }
+
+        private void SubscribeToCommands()
+        {
+            // SetCommandの購読
+            var setCommand = CommandRegistry.GetCommand<SetCommand>();
+            setCommand.OnVariableSet
+                .Subscribe(varData => { SetVariable(varData.varName, varData.value); })
+                .AddTo(destroyCancellationToken);
+
+            // PrintCommandの購読
+            var printCommand = CommandRegistry.GetCommand<PrintCommand>();
+            printCommand.OnPrint
+                .Subscribe(varName => { Debug.Log($"{varName}: {Variables[varName]}"); })
+                .AddTo(destroyCancellationToken);
+
+            // ChoiceCommandの購読
+            var choiceCommand = CommandRegistry.GetCommand<ChoiceCommand>();
+            choiceCommand?.OnChoiceShow
+                .Subscribe(ShowChoices)
+                .AddTo(destroyCancellationToken);
+
+            // PreloadAssetCommandの購読
+            var preloadAssetCommand = CommandRegistry.GetCommand<RequestAssetCommand>();
+            preloadAssetCommand.OnRequestLoadAsset
+                .Subscribe(assetData => { AssetLoader.RequestAssetLoad(assetData.Key, assetData.AssetPath); })
+                .AddTo(destroyCancellationToken);
+
+            var requestSpriteCommand = CommandRegistry.GetCommand<RequestSpriteCommand>();
+            requestSpriteCommand.OnRequestLoadSpriteAsset
+                .Subscribe(assetData => { AssetLoader.RequestSpriteAsset(assetData.Key, assetData.AssetPath); })
+                .AddTo(destroyCancellationToken);
+
+            // InitVariableCommandの購読
+            var initVariableCommand = CommandRegistry.GetCommand<InitVariableCommand>();
+            initVariableCommand.OnVariableInit
+                .Subscribe(varData => { SetVariable(varData.varName, varData.value); })
+                .AddTo(destroyCancellationToken);
+
+            // FinishCommandの購読
+            var finishCommand = CommandRegistry.GetCommand<FinishCommand>();
+            finishCommand.OnFinish
+                .Subscribe(_ => { OnScenarioFinished(); })
+                .AddTo(destroyCancellationToken);
+        }
+
+        private readonly Subject<bool> _onStartDownloadButtonInteractable = new();
+        public Observable<bool> OnStartDownloadButtonInteractable => _onStartDownloadButtonInteractable;
+
+        private string GetVariableValue(string varName)
+        {
+            return Variables.TryGetValue(varName, out var variable) ? variable.ToString() : "0";
+        }
+
+        private void ShowChoices(List<string> args)
+        {
+            _onShowChoice.OnNext(args);
+        }
+
+        private readonly Subject<List<string>> _onShowChoice = new();
+        public Observable<List<string>> OnShowChoice => _onShowChoice;
+
+        public override void Select(int choiceIndex)
+        {
+            // 選択された選択肢の変数を設定
+            var current = GetCurrentLine();
+            if (current is { CommandName: "Choice" } && current.Args.Count > choiceIndex + 1)
+            {
+                var varName = current.Args[0];
+                var selectedChoice = current.Args[choiceIndex + 1];
+                SetVariable(varName, selectedChoice);
+            }
+
+            base.Select(choiceIndex);
+        }
+
+        public T GetAsset<T>(string key) where T : Object
+        {
+            return AssetLoader.GetAsset<T>(key);
+        }
+
+        public Sprite GetSpriteAsset(string key)
+        {
+            return AssetLoader.GetSpriteAsset(key);
+        }
+    }
+}
