@@ -9,145 +9,123 @@
 
 ---
 
-## P0（動作の前提条件）
+## 実装済み機能（develop 時点）
 
-### アーキテクチャ修正
+<details>
+<summary>一覧</summary>
 
-- [ ] **`IScenarioCommandAsync` 設計修正：戻り値で NextID を制御する**
-  - 現状: `ProceedAsync()` が `line.CommandName == "Branch"` を文字列判定して次IDを決定している（拡張禁止な設計）
-  - 修正後: `ExecuteCommandAsync` が `int?` を返す。`null` = `NextIDs[0]`、`n` = `NextIDs[n]` へ遷移
-  - `BranchCommand` は `true/false` を `0/1` にマップして返す
-  - `ChoiceCommand` は選択インデックスを返す
-  - `Manager` からコマンド種別の文字列判定ロジックを全て除去する
+- テキスト表示（ShowTextCommand）：タイプライター演出・`${var}` 変数展開・入力待ち
+- 選択肢（ChoiceCommand）：`Manager.Select()` で待機解除
+- 変数ストア（`Dictionary<string, object>`）：int/float/bool/string 型推論
+- 変数操作：`InitVariable` / `Set` / `Add` / `Print`
+- 条件分岐：`Branch` + `IfEqual` / `IfNotEqual` / `IfGreater` / `IfGreaterEqual` / `IfLess` / `IfLessEqual`
+- フロー制御：`Wait` / `Call`（サブシナリオ） / `Finish`
+- キャラクター：`ShowCharacter` / `HideCharacter` / `MoveCharacter`（※移動アニメ未実装）
+- 背景・演出：`ShowBackground` / `ShowStill` / `ShowIcon` / `FadeIn` / `FadeOut` / `Gray` / `Sepia`
+- サウンド：`PlayBGM` / `StopBGM` / `PlaySE` / `StopSE` / `PlayVoice`
+- メニュー：`ShowMenu` / `HideMenu`
+- 並列実行：`Task`（蓄積）+ `Exec`（並列 UniTask.WhenAll）
+- アセット管理：`RequestAsset` / `RequestSprite` / `RequestSound` / `LoadAll`
+- ライフサイクルイベント：`OnLineExecuted` / `OnChoiceSelected` / `OnScenarioEnded`
+- Sample UI：タイプライター・選択肢ポップアップ・バックログ・オートアドバンス・スピード制御・ターボモード
 
-- [ ] **`CancellationToken` の伝搬**
-  - `IScenarioCommandAsync.ExecuteCommandAsync(ScenarioLine, CancellationToken)` にシグネチャ変更
+</details>
+
+---
+
+## P0（バグ・クリティカルな設計問題）
+
+- [ ] **`ProceedAsync()` に `CancellationToken` を伝搬する**
+  - 現状: while ループにキャンセル手段がなく、MonoBehaviour 破棄後も走り続けるリスクがある
   - `ProceedAsync(CancellationToken)` にシグネチャ変更
-  - `ADVanceManagerBase` に `Stop()` を追加し `CancellationTokenSource` をキャンセルする
-  - `ProceedAsync().Forget()` を廃止し `Load()` 内でトークンを渡す
+  - `Load()` で `this.GetCancellationTokenOnDestroy()` を渡す
+  - `IScenarioCommandAsync.ExecuteCommandAsync` にも `CancellationToken` を追加し全コマンドに伝搬する
 
-### 変数管理
+- [ ] **`InitVariableCommand` のフロー制御バグを修正する**
+  - 現状: `await Manager.Wait()` の後に `SetNextLineId()` しており、`Wait()` が `ProceedAsync()` を再起動した後に次IDを設定するため意図した位置より1行進む可能性がある
+  - `SetNextLineId()` を `await Manager.Wait()` より前に移動する
 
-- [ ] **変数ストア（`IScenarioVariableStore` + `InMemoryVariableStore`）**
-  - `IScenarioVariableStore` インターフェース（`Set / TryGet`）
-  - デフォルト実装: `Dictionary<string, string>` ベースの `InMemoryVariableStore`
-  - 永続化・型変換はゲーム側が実装を差し替える DI 設計
-  - `ADVanceManagerBase` にストアを保持し、コマンドが参照できるよう渡す
+- [ ] **`SetCommand` が変数ストアに直接書き込まない設計を修正する**
+  - 現状: `SetCommand` は Subject 通知だけで `Manager.SetVariable()` を呼ばない。`ScenarioManager` を継承しないカスタムサブクラスでは `Set` が機能しない
+  - `SetCommand` が `Manager.SetVariable()` を直接呼ぶよう修正する（`AddCommand` と同じ方式に統一）
+  - `ScenarioManager.SubscribeToCommands()` 側の重複処理を削除する
 
-- [ ] **変数操作コマンド（`SetVarCommand`）**
-  - `CommandName = "SetVar"`, `Args: [varName, value]`
-  - 変数ストアへの書き込み
-
-- [ ] **変数参照型の分岐評価器**
-  - `IScenarioBranchEvaluator.Evaluate(args, IScenarioVariableStore)` にシグネチャ拡張
-  - 引数を評価する際、`$varName` 形式を変数ストアの値で解決してから比較する
-  - 既存の 6 種演算子（Equal/NotEqual/Greater 等）をストア参照対応に更新
-
-### 入力待機
-
-- [ ] **`IScenarioInputProvider` 抽象化**
-  - テキスト送り・選択肢選択をインターフェースで抽象化
-  ```csharp
-  public interface IScenarioInputProvider
-  {
-      UniTask WaitForAdvanceAsync(CancellationToken cancellationToken);
-      UniTask<int> WaitForChoiceAsync(IReadOnlyList<string> choices, CancellationToken cancellationToken);
-  }
-  ```
-  - `ADVanceManagerBase` にコンストラクタ or `Initialize()` で注入
-
-- [ ] **`ShowTextCommand` 実体化**
-  - `IScenarioInputProvider.WaitForAdvanceAsync()` を `await` してから完了する
-  - `IScenarioTextFormatter` でテキストの変数展開を行ってからコールバックに渡す
-  - `ADVanceManagerBase.OnLineExecuted` に展開済みテキストを乗せる
-
-- [ ] **`ChoiceCommand` 待機ロジック実装**
-  - `IScenarioInputProvider.WaitForChoiceAsync()` を `await` して選択インデックスを取得
-  - `ADVanceManagerBase.Select()` メソッドを `IScenarioInputProvider` の実装に移動して除去する
-  - 選択インデックスを `ExecuteCommandAsync` の戻り値で返す（NextID 制御修正と連動）
+- [ ] **`TaskRegistry` の `static` フィールドを除去する**
+  - 現状: `ConcurrentDictionary` が static のためシーン再開・複数シナリオ実行時に前回の Task が残留するリスクがある
+  - `ADVanceManagerBase` のインスタンスフィールドに変更し、ライフサイクルをインスタンスに紐付ける
 
 ---
 
-## P1（実用シナリオに必要）
+## P1（機能不全・接続漏れ）
 
-### 遷移・制御
+- [ ] **`MoveCharacterCommand` の移動アニメーションを実装する**
+  - 現状: `Character.MoveCharacter()` が `Debug.Log` + `UniTask.CompletedTask` のスタブ。入力待ちループが即完了してしまっている
+  - DOTween による `transform.DOMove(target, duration)` を実装し、アニメーション完了で `UniTaskCompletionSource.TrySetResult()` を呼ぶ
 
-- [ ] **ラベル管理**
-  - `ScenarioLine` に `string Label` フィールドを追加（任意）
-  - `Load()` 時にラベル名 → ID の逆引き辞書を構築
-  - `CsvParser` / `CsvImporter` をラベル列に対応
+- [ ] **Sample UI のサウンド系 Observable を接続する**
+  - 現状: `ScenarioController.SetCommandEvent()` で `PlayBGM` / `StopBGM` / `PlaySE` / `StopSE` / `PlayVoice` を一切購読していない
+  - `ScenarioController` にサウンド管理コンポーネントを追加し、各 Observable を購読して実際に音を鳴らす
 
-- [ ] **`JumpCommand`（無条件ジャンプ）**
-  - `CommandName = "Jump"`, `Args: [labelName or lineId]`
-  - ラベル名を指定した場合は辞書から ID を解決
-  - `ExecuteCommandAsync` の戻り値でジャンプ先 NextID インデックスを返す
+- [ ] **`AssetPreloadManager` をシナリオフローに接続する**
+  - 現状: `ScenarioManager` / `ScenarioController` のどちらからも参照されておらず、プリロードが機能していない
+  - `ScenarioController.StartScenario()` フローに `AssetPreloadManager.PreloadAssetsAsync()` を組み込む
+  - `AssetPreloadManager._loadedAssets` と `AssetLoaderBase._loadedAssets` の二重管理を解消する
 
-- [ ] **`WaitCommand`（秒数待機）**
-  - `CommandName = "Wait"`, `Args: [durationSeconds]`
-  - `UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken)` を `await`
+- [ ] **`OnAssetRegistryUpdated` を実際に発行する**
+  - `ADVanceManagerBase` に宣言はあるが `OnNext` が呼ばれていない
+  - `RequestAsset` 系コマンド実行後にレジストリ更新を通知する
 
-- [ ] **Pause / Resume API**
-  - `ADVanceManagerBase.PauseAsync()` / `ResumeAsync()`
-  - 中断時の `CurrentLineId` を外部から取得できるプロパティを追加
+- [ ] **`ChoicePopup` の選択肢ボタンを動的生成に変更する**
+  - 現状: Inspector にプリセットした固定数の `List<Button>` に依存しており、選択肢数が上限を超えると余りが非表示になる
+  - ボタンを `Instantiate` で動的生成し、選択肢数に応じてレイアウトを調整する
 
-### イベント
+- [ ] **変数展開ロジックの重複を解消する**
+  - 現状: `ShowTextCommand.ProcessVariables()` と `ScenarioController.ProcessVariables()` に同一ロジックが2か所あり展開が2回走る
+  - `ADVanceManagerBase` に `FormatText(string template)` として一元化し、両者を委譲する
 
-- [ ] **ライフサイクルイベント追加**
-  - `Observable<Unit> OnScenarioStarted`（`Load()` 呼び出し時）
-  - `Observable<Unit> OnScenarioCompleted`（末尾ラインの NextID が空になったとき）
-  - `Debug.Log("シナリオ終了")` の直書きを除去して `OnScenarioCompleted` に置き換える
-  - `Observable<ScenarioLine> OnBeforeLineExecuted`（コマンド実行前フック）
+- [ ] **`ScenarioManager.Select()` オーバーライドの解釈ズレを解消する**
+  - 基底クラス: `Choice` の全 Args を選択肢テキストとして扱う
+  - `ScenarioManager`: `Args[0]` を変数名・`Args[1]` 以降を選択肢値として扱う
+  - どちらかに統一し、CSV 仕様・`ChoiceCommand` の Args 設計と一致させる
 
-### 外部連携
+- [ ] **`ScenarioScenePresenter.SetEvent()` を実装または削除する**
+  - 空実装のまま役割不明。必要なら実装、不要なら削除する
 
-- [ ] **`ExternalEventCommand`（コールバック注入）**
-  - `CommandName = "Event"`, `Args: [eventName, ...extraArgs]`
-  - ゲーム側が `RegisterEventHandler(string eventName, Func<List<string>, CancellationToken, UniTask> handler)` で登録
-  - ADVance 本体はイベント名とハンドラの Registry を持つだけ。中身はゲーム側が実装する
-  - これにより感情値変化・画面遷移・エフェクト等のゲーム固有処理をシナリオ記述から発火できる
+- [ ] **`_onStartDownloadButtonInteractable` を削除する**
+  - `ScenarioManager` に宣言のみで購読側も発行側もない未使用フィールド
 
-### データ
+---
 
-- [ ] **セーブ / ロード（`ScenarioSaveData`）**
-  - `ScenarioSaveData { int CurrentLineId; Dictionary<string, string> Variables; }`
+## P2（品質・運用性向上）
+
+- [ ] **`AssetLoaderBase._loadedAssets` を `Dictionary` に変更する**
+  - 現状: `List<(string key, Object asset)>` で `GetAsset<T>(key)` が O(N) の線形探索
+  - `Dictionary<string, Object>` に変更して O(1) 参照にする
+
+- [ ] **NextIDs の「相対オフセット」仕様をドキュメント化・見直す**
+  - 現状: `GetNextId()` が `line.ID + NextIDs[index]` として相対加算する仕様がコード上に暗黙的
+  - `CsvImporter` と仕様書にドキュメントを追記する
+  - 絶対 ID 方式への変更が有効か検討する
+
+- [ ] **セーブ / ロード API を追加する**
+  - `ScenarioSaveData { int CurrentLineId; Dictionary<string, object> Variables; }` を定義
   - `ADVanceManagerBase.GetSaveData()` / `RestoreFromSaveData(ScenarioSaveData)` を公開
-  - 永続化方法はゲーム側に委ねる。ADVance はデータクラスの提供のみ
+  - 永続化方法はゲーム側に委ねる
 
-### CSV 記述
-
-- [ ] **コメント行対応**
-  - `#` で始まる行をコメントとして `CsvParser` で読み飛ばす
-  - ライター・非エンジニアがシナリオに意図・担当メモを残せる
-
----
-
-## P2（品質・制作効率向上）
-
-- [ ] **テキスト変数展開（`IScenarioTextFormatter`）**
-  - `{key}` プレースホルダーを変数ストアの値で展開するインターフェース
-  - デフォルト実装 `DefaultTextFormatter` を同梱
-  - ルビ・タグ等の独自構文はゲーム側が実装を差し替え可能
-
-- [ ] **コマンドミドルウェア（`IScenarioCommandMiddleware`）**
-  - コマンド実行前後にフックを差し込める chain-of-responsibility 設計
-  - ログ出力・オートモードのウェイト挿入・タイムアウト監視に使う
-
-- [ ] **コマンド並列実行（`ParallelCommand`）**
-  - `CommandName = "Parallel"`, `Args: [commandName1, commandName2, ...]`
-  - `UniTask.WhenAll` で全コマンドの完了を待機
-  - 「テキスト表示と BGM フェードイン同時」のような演出に対応
-
-- [ ] **`CallCommand` / `ReturnCommand`（サブシナリオ呼び出し）**
-  - 別 ScenarioData を読み込んで実行し、完了後に元の位置へ戻る
-  - 繰り返し使う演出パターンをサブシナリオとして分離する
-  - `_callStack` (Stack&lt;int&gt;) を Manager に保持
-
-- [ ] **既読管理（Read History）**
-  - 実行済み `LineId` の HashSet を Manager が保持
-  - `IsRead(int lineId)` を公開
+- [ ] **既読管理 API を追加する**
+  - 実行済み `LineId` の `HashSet` を `ADVanceManagerBase` が保持
+  - `bool IsRead(int lineId)` を公開
   - 既読スキップ・高速送りの実装基盤として使う
 
-- [ ] **バックログ（Message Log）**
-  - 実行済み `ScenarioLine` のリストを一定件数保持
-  - `IReadOnlyList<ScenarioLine> GetMessageLog()` を公開
-  - UI 側がバックログ画面を描画するためのデータソース
+- [ ] **タイプライター速度をコマンドで制御できるようにする**
+  - 現状: `ScenarioUITextPresenter.CharactersPerSecond = 20f` がハードコード
+  - `SetSpeed` コマンドまたは `ShowText` のオプション引数として速度を指定できるようにする
+
+- [ ] **コアのユニットテストを追加する**
+  - 現状: ユーティリティ層（CsvParser / CsvImporter / ConvertValues / ScenarioBranchRegistry）のみカバー
+  - 変数ストア読み書き・`Set` / `Add` / `InitVariable` の動作・`Branch` 分岐評価をテスト対象に追加する
+  - コマンドの MonoBehaviour 依存を整理し、EditMode テスト可能な設計に近づける
+
+- [ ] **CSV にコメント行を追加する**
+  - `#` で始まる行を `CsvParser` でスキップする
+  - ライターや非エンジニアが意図・担当メモをシナリオに残せるようにする
